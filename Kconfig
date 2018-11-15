@@ -1,0 +1,12 @@
+config USR_LIB_SMARTCARD
+  select USR_LIB_ISO7816
+  bool  "iso7816-3 and iso14443 abstraction layer"
+  default y
+  ---help---
+  Abstract protocol specific physical related communication
+  interface to support both iso7816-3 and iso14443 smartcard
+  interfaces through the same API.
+config USR_LIB_SMARTCARD_CFLAGS
+  string
+  default " -I../../libs/smartcard/api " if USR_LIB_SMARTCARD
+
