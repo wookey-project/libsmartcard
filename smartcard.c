@@ -96,6 +96,11 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 	offset = i * block_size; /* offset where we begin */
 	size = 0;
 	while(size < to_push){
+		if(size >= 256){
+			/* Sanity check: our buffer should not exceed 256 bytes long anyways ... */
+			*ret = -1;
+			return 0;
+		}
 		/* Do we have to push CLA, IN, P1, P2? */
 		if(offset == 0){
 			buffer[size++] = apdu->cla;
@@ -127,6 +132,11 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 						continue;
 					}
 					if(offset > 4){
+						if((offset-5) >= APDU_MAX_BUFF_LEN){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = apdu->data[offset-5];
 						offset++;
 						continue;
@@ -149,6 +159,11 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 						continue;
 					}
 					if(offset > 6){
+						if((offset-7) >= APDU_MAX_BUFF_LEN){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = apdu->data[offset-7];
 						offset++;
 						continue;
