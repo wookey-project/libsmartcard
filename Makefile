@@ -12,6 +12,7 @@ VERSION = 1
 # use an app-specific build dir
 APP_BUILD_DIR = $(BUILD_DIR)/libs/$(LIB_NAME)
 
+CFLAGS += $(LIBS_CFLAGS)
 CFLAGS += -ffreestanding
 CFLAGS += $(DRIVERS_CFLAGS)
 CFLAGS += -I$(PROJ_FILES)/include/generated -I$(PROJ_FILES) -I$(PROJ_FILES)/libs/std -I$(PROJ_FILES)/kernel/shared -I.
@@ -19,7 +20,6 @@ CFLAGS += -I$(PROJ_FILES)/include/generated -I$(PROJ_FILES) -I$(PROJ_FILES)/libs
 # of the local api dir needed
 CFLAGS += -Iapi
 # dependency on lower iso7816 interface
-CFLAGS += -I$(PROJ_FILES)/libs/iso7816/api
 CFLAGS += -MMD -MP -nostdlib
 
 LDFLAGS += -fno-builtin -nostdlib -nostartfiles
