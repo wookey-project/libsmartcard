@@ -311,7 +311,7 @@ void SC_print_Card(SC_Card *card)
 
 err:
 	return;
- 
+
 }
 
 /* Abstract Send APDU/Receive response  function */
@@ -336,15 +336,50 @@ err:
         return -1;
 }
 
-int SC_fsm_early_init(void){
-	/* Early init what is necessary */
-	if(SC_iso7816_fsm_early_init()){
-		goto err;
-	}
-	
+static volatile bool map_voluntary;
+
+int SC_fsm_early_init(sc_map_mode_t map_mode)
+{
+    switch (map_mode) {
+        case SC_MAP_AUTO:
+            map_voluntary = false;
+            /* Early init what is necessary */
+            if(SC_iso7816_fsm_early_init(SC_7816_MAP_AUTO)){
+                goto err;
+            }
+            break;
+        case SC_MAP_VOLUNTARY:
+            map_voluntary = true;
+            /* Early init what is necessary */
+            if(SC_iso7816_fsm_early_init(SC_7816_MAP_VOLUNTARY)){
+                goto err;
+            }
+            break;
+        default:
+            printf("invalid map mode\n");
+            goto err;
+    }
+
 	return 0;
 err:
 	return -1;
+}
+
+int SC_fsm_map(void)
+{
+    if (map_voluntary) {
+        return SC_iso7816_fsm_map();
+    }
+    return 0;
+
+}
+
+int SC_fsm_unmap(void)
+{
+    if (map_voluntary) {
+        return SC_iso7816_fsm_unmap();
+    }
+    return 0;
 }
 
 int SC_fsm_init(SC_Card *card, uint8_t do_negiotiate_pts, uint8_t do_change_baud_rate, uint8_t do_force_protocol, uint32_t do_force_etu){
@@ -383,7 +418,7 @@ void SC_smartcard_lost(SC_Card *card){
         }
 
 err:
-	return; 
+	return;
 }
 
 uint8_t SC_is_smartcard_inserted(SC_Card *card){
@@ -403,10 +438,10 @@ uint8_t SC_is_smartcard_inserted(SC_Card *card){
                         goto err;
         }
 
-	
+
 	return ret;
 err:
-	return 0; 
+	return 0;
 }
 
 int SC_wait_card_timeout(SC_Card *card){
