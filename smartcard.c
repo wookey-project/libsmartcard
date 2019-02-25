@@ -91,6 +91,14 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 
 	/* Size to push */
 	to_push = (apdu_size - (i * block_size)) > block_size ? block_size : (apdu_size - (i * block_size));
+	/* Sanity check on the pushed size.
+	 * Not necessary with the previous formula, but better safe than sorry.
+	 */
+	if(to_push > block_size){
+		/* Overlow in buffer */
+		*ret = -1;
+		return 0;
+	}
 
 	/* Put as much data as we can in the buffer */
 	offset = i * block_size; /* offset where we begin */
