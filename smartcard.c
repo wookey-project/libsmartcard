@@ -1,4 +1,5 @@
-#include "api/print.h"
+#include "api/stdio.h"
+#include "api/nostd.h"
 
 #include "libiso7816.h"
 /* TODO: add ISO14443 layer header here when it is implemented */
