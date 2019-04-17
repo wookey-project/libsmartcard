@@ -1,7 +1,7 @@
 #ifndef __SMARTCARD_H__
 #define __SMARTCARD_H__
 
-#include "api/types.h"
+#include "libc/types.h"
 
 /*********** ATR for contact cards *************/
 /*** ATR parts lengths */

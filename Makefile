@@ -1,31 +1,37 @@
+###################################################################
+# About the library name and path
+###################################################################
+
+# library name, without extension
 LIB_NAME ?= libsmartcard
 
+# project root directory, relative to app dir
 PROJ_FILES = ../../
+
+# library name, with extension
 LIB_FULL_NAME = $(LIB_NAME).a
 
-VERSION = 1
-#############################
-
+# SDK helper Makefiles inclusion
 -include $(PROJ_FILES)/Makefile.conf
 -include $(PROJ_FILES)/Makefile.gen
 
 # use an app-specific build dir
 APP_BUILD_DIR = $(BUILD_DIR)/libs/$(LIB_NAME)
 
+###################################################################
+# About the compilation flags
+###################################################################
+
 CFLAGS += $(LIBS_CFLAGS)
-CFLAGS += -ffreestanding
-CFLAGS += $(DRIVERS_CFLAGS)
-CFLAGS += -I$(PROJ_FILES)/include/generated -I$(PROJ_FILES) -I$(PROJ_FILES)/libs/std -I$(PROJ_FILES)/kernel/shared -I.
-# there is a circular dependency beteween libiso7816 & libsmartcard exported headers, making the inclusion
+# WARNING: there is a circular dependency beteween
+# libiso7816 & libsmartcard exported headers, making the inclusion
 # of the local api dir needed
 CFLAGS += -Iapi
-# dependency on lower iso7816 interface
-CFLAGS += -MMD -MP -nostdlib
+CFLAGS += -MMD -MP
 
-LDFLAGS += -fno-builtin -nostdlib -nostartfiles
-LD_LIBS += -lg
-
-BUILD_DIR ?= $(PROJ_FILE)build
+#############################################################
+# About library sources
+#############################################################
 
 SRC_DIR = .
 SRC = $(wildcard $(SRC_DIR)/*.c)
@@ -39,6 +45,10 @@ OUT_DIRS = $(dir $(OBJ))
 TODEL_CLEAN += $(OBJ)
 # targets
 TODEL_DISTCLEAN += $(APP_BUILD_DIR)
+
+##########################################################
+# generic targets of all libraries makefiles
+##########################################################
 
 .PHONY: app doc
 
@@ -60,9 +70,6 @@ show:
 
 lib: $(APP_BUILD_DIR)/$(LIB_FULL_NAME)
 
-#############################################################
-# build targets (driver, core, SoC, Board... and local)
-# App C sources files
 $(APP_BUILD_DIR)/%.o: %.c
 	$(call if_changed,cc_o_c)
 
@@ -75,4 +82,3 @@ $(APP_BUILD_DIR):
 	$(call cmd,mkdir)
 
 -include $(DEP)
--include $(TESTSDEP)
