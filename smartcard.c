@@ -91,7 +91,7 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 	}
 
 	/* Size to push */
-	to_push = (apdu_size - (i * block_size)) > block_size ? block_size : (apdu_size - (i * block_size));
+	to_push = ((apdu_size - (i * block_size)) > block_size) ? block_size : (apdu_size - (i * block_size));
 	/* Sanity check on the pushed size.
 	 * Not necessary with the previous formula, but better safe than sorry.
 	 */
@@ -184,36 +184,36 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 		if(apdu->send_le){
 			if(offset >= (apdu_size - apdu_le_size)){
 				if(apdu_le_size == 1){
-					if(offset == apdu_size-1){
+					if(offset == (apdu_size-1)){
 						buffer[size++] = apdu->le;
 						offset++;
 						continue;
 					}
 				}
 				if(apdu_le_size == 2){
-					if(offset == apdu_size-2){
+					if(offset == (apdu_size-2)){
 						buffer[size++] = (apdu->le >> 8) & 0xff;
 						offset++;
 						continue;
 					}
-					if(offset == apdu_size-1){
+					if(offset == (apdu_size-1)){
 						buffer[size++] = apdu->le & 0xff;
 						offset++;
 						continue;
 					}
 				}
 				if(apdu_le_size == 3){
-					if(offset == apdu_size-3){
+					if(offset == (apdu_size-3)){
 						buffer[size++] = 0x00;
 						offset++;
 						continue;
 					}
-					if(offset == apdu_size-2){
+					if(offset == (apdu_size-2)){
 						buffer[size++] = (apdu->le >> 8) & 0xff;
 						offset++;
 						continue;
 					}
-					if(offset == apdu_size-1){
+					if(offset == (apdu_size-1)){
 						buffer[size++] = apdu->le & 0xff;
 						offset++;
 						continue;
