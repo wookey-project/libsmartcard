@@ -36,6 +36,7 @@ Initialization functions
 """"""""""""""""""""""""
 
 The initialization functions are the following: ::
+
   int SC_fsm_early_init(sc_map_mode_t map_mode);
   int SC_fsm_init(SC_Card *card, uint8_t do_negotiate_pts, uint8_t do_change_baudrate, uint8_t do_force_protocol, uint32_t do_force_etu);
 
@@ -49,6 +50,8 @@ contact cards, the ATQ for contacless cards, and optionally negotiate the PSS (w
 
 The following arguments have a signification only for contact cards for now (contacless cards support is a work
 in progress):
+
+
   * uint8_t do_force_protocol: does the user want to force the protocol. A value of 0 means no protocol is forced,
   a value of 1 means T=0 is forced, a value of 2 means T=1 is forced
   * uint8_t do_negotiate_pts: effectively performs the PTS protocol negotiation if set to non zero
