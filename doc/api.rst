@@ -1,5 +1,5 @@
-About the ISO7816 library API
-----------------------------
+About the smartcard library API
+-------------------------------
 
 The API exposed by the library is quite simple and mainly exposes:
 

@@ -17,6 +17,6 @@ is lacking a driver support that is a future work.
    :name: mastertoc
    :maxdepth: 2
 
-   The ISO7816 library API <api>
+   The smartcard library API <api>
    FAQ <faq>
 
