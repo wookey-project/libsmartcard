@@ -77,6 +77,7 @@ and the protocol is the preferred one provided by the card ATR (or T=0 as standa
 
 A more advanced usage can be: ::
 
+  #include "libsmartcard.h" 
   SC_Card card;
   if(SC_fsm_init(&card, 1, 1, 2, 64)){
     goto err;
@@ -86,6 +87,7 @@ This call asks for a PSS negotiation, asks for a baud rate change, forces the T=
 
 The user can also perform a negotiation attempt and then fallback to default: ::
 
+  #include "libsmartcard.h" 
   SC_Card card;
   if(SC_fsm_init(&card, 1, 1, 2, 64)){
     if(SC_fsm_init(&card, 0, 0, 0, 0)){
@@ -98,6 +100,16 @@ The user can also perform a negotiation attempt and then fallback to default: ::
   are not compatible or supported. This is why it is recommended to fallback to a non negotitated 'SC_fsm_init'
   if the negotiated one fails
  
+When a card communication must be reinitialized/reset, it is advised to wait for some timeouts using the following API: ::
+
+  int SC_wait_card_timeout(SC_Card *card);
+
+Finally, two APIs are used to explicitly ask the lower level driver to map or unmap the smart card device from the
+task's memory space: ::
+  
+  int SC_fsm_map(void);
+  int SC_fsm_unmap(void);
+
 
 Primitives to send APDUs
 """""""""""""""""""""""""
@@ -140,7 +152,8 @@ The response has the following structure: ::
 
 
 Sending an APDU and getting back a response is as simple as: ::
-  
+ 
+  #include "libsmartcard.h" 
   /* Initialize a communication with the card */
   SC_Card card;
   if(SC_fsm_init(&card, 1, 1, 2, 64)){
@@ -161,6 +174,13 @@ Sending an APDU and getting back a response is as simple as: ::
   }
   /* If there is no error, resp is filled with the card response! */
 
+The smartcard library also provides two helper functions to help APDU fragmentation on the physical line,
+which proves helpful when dealing with lower layers protocols (T=0 and T=1 for contact cards, ISO14443, etc.).
+These helpers are exposed but are mainly for an internal usage of the library: ::
+
+  unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu);
+  uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int i, uint8_t block_size, int *ret);
+
 Pretty printing
 """"""""""""""""
 
@@ -169,10 +189,11 @@ We have straightforward APIs for pretty printing on the debug console the abstra
   void SC_print_Card(SC_Card *card);
   void SC_print_APDU(SC_APDU_cmd *apdu);
   void SC_print_RESP(SC_APDU_resp *resp);
-  
+
 
 Card insertion detection
 """""""""""""""""""""""""
+
 The following API: ::
 
   uint8_t SC_is_smartcard_inserted(SC_Card *card);
@@ -182,3 +203,12 @@ can be used for polling the smart card presence (returns 0 is card is absent, no
 For asynchronous detection, a callback registration mechanism is also offered through: ::
 
   int SC_register_user_handler_action(SC_Card *card, void (*action)(void));
+
+Finally, there is an API to call the lower layers of the libraries/drivers stack when
+a smart card is detected as lost: ::
+
+  void SC_smartcard_lost(void)
+
+this function helps the hardware layers to reinitialize and flush elements, and
+eventually notify other drivers. It should be called when the library indeed detects
+a smart card loss.
