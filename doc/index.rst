@@ -1,6 +1,9 @@
 The smartcard library
 ===================
 
+.. highlight:: c
+
+
 This library is a wrapper for smart cards
 (either contact or contactless) communication.
 
