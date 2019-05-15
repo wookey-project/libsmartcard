@@ -2,7 +2,7 @@ Smartcard library FAQ
 ---------------------
 
 Is the smartcard library complete?
-"""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""
 
 No, this library is still a work in progress.
 More particularly, even though all the abstraction for

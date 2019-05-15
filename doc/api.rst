@@ -113,7 +113,7 @@ task``s memory space: ::
 
 
 Primitives to send APDUs
-"""""""""""""""""""""""""
+""""""""""""""""""""""""
 
 The library provides a unique API to send an APDU to a smart card and receive its response: ::
 
@@ -183,7 +183,7 @@ These helpers are exposed but are mainly for an internal usage of the library: :
   uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int i, uint8_t block_size, int *ret);
 
 Pretty printing
-""""""""""""""""
+"""""""""""""""
 
 We have straightforward APIs for pretty printing on the debug console the abstract card, APDUs and responses: ::
   
@@ -193,7 +193,7 @@ We have straightforward APIs for pretty printing on the debug console the abstra
 
 
 Card insertion detection
-"""""""""""""""""""""""""
+""""""""""""""""""""""""
 
 The following API: ::
 

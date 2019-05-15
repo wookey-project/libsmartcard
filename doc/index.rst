@@ -1,5 +1,5 @@
 The smartcard library
-===================
+=====================
 
 .. highlight:: c
 
