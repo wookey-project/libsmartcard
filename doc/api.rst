@@ -58,7 +58,7 @@ in progress):
   * ``uint8_t do_force_protocol``: does the user want to force the protocol. A value of 0 means no protocol is forced, a value of 1 means T=0 is forced, a value of 2 means T=1 is forced
   * ``uint8_t do_negotiate_pts``: effectively performs the PTS protocol negotiation if set to non zero
   * ``uint8_t do_change_baudrate``: effectively modifies the baudrate with the card if set to non zero
-  * ``uint32_t do_force_etu``: forces a target ETU if set to non zero. If the provided ETU is not achievable, we use a ``best fit`` algorithm to get the closest ETU lower than the one asked by the user
+  * ``uint32_t do_force_etu``: forces a target ETU if set to non zero. If the provided ETU is not achievable, we use a **best fit** algorithm to get the closest ETU lower than the one asked by the user
 
 This function returns 0 on success, and non zero on error.
 
