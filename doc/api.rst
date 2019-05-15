@@ -27,13 +27,13 @@ A card is abstracted with the following structure: ::
   typedef struct {
         /* Card type (contact or contactless) */
         smartcard_types type;
-        /* Card information (ATR for contact cards, ATQ/ATS for contacless, ... */
+        /* Card information (ATR for contact cards, ATQ/ATS for contactless, ... */
         SC_Info info;
         /* the protocol we use */
         uint8_t T_protocol;
   } SC_Card;
 
-As we can see, this captures the abstraction layer above contact and contacless cards.
+As we can see, this captures the abstraction layer above contact and contactless cards.
 
 Initialization functions
 """"""""""""""""""""""""
@@ -43,31 +43,29 @@ The initialization functions are the following: ::
   int SC_fsm_early_init(sc_map_mode_t map_mode);
   int SC_fsm_init(SC_Card *card, uint8_t do_negotiate_pts, uint8_t do_change_baudrate, uint8_t do_force_protocol, uint32_t do_force_etu);
 
-The 'SC_fsm_early_init' simply initializes the lower levels (it is a mere call to the low level ISO7816
+The ``SC_fsm_early_init`` simply initializes the lower levels (it is a mere call to the low level ISO7816
 library and driver that initializes the necessary hardware IPs such as USART and GPIOs).
 
-The 'SC_fsm_init' function is the core function that establishes the contact with the smart card. Its purpose is to get the ATR for
-contact cards, the ATQ for contacless cards, and optionally negotiate the PSS (when possible). The arguments are the following:
+The ``SC_fsm_init`` function is the core function that establishes the contact with the smart card. Its purpose is to get the ATR for
+contact cards, the ATQ for contactless cards, and optionally negotiate the PSS (when possible). The arguments are the following:
 
-  * SC_Card \*card: the structure that will receive the card abstract representation
+  * ``SC_Card *card``: the structure that will receive the card abstract representation
 
-The following arguments have a signification only for contact cards for now (contacless cards support is a work
+The following arguments have a signification only for contact cards for now (contactless cards support is a work
 in progress):
 
 
-  * uint8_t do_force_protocol: does the user want to force the protocol. A value of 0 means no protocol is forced,
-  a value of 1 means T=0 is forced, a value of 2 means T=1 is forced
-  * uint8_t do_negotiate_pts: effectively performs the PTS protocol negotiation if set to non zero
-  * uint8_t do_change_baudrate: effectively modifies the baudrate with the card if set to non zero
-  * uint32_t do_force_etu: forces a target ETU if set to non zero. If the provided ETU is not achievable,
-  we use a 'best fit' algorithm to get the closest ETU lower than the one asked by the user
+  * ``uint8_t do_force_protocol``: does the user want to force the protocol. A value of 0 means no protocol is forced, a value of 1 means T=0 is forced, a value of 2 means T=1 is forced
+  * ``uint8_t do_negotiate_pts``: effectively performs the PTS protocol negotiation if set to non zero
+  * ``uint8_t do_change_baudrate``: effectively modifies the baudrate with the card if set to non zero
+  * ``uint32_t do_force_etu``: forces a target ETU if set to non zero. If the provided ETU is not achievable, we use a ``best fit`` algorithm to get the closest ETU lower than the one asked by the user
 
 This function returns 0 on success, and non zero on error.
 
 .. note::
   The following elements mainly concern contact cards. Contacless cards are work in progress 
 
-A default usage of 'SC_fsm_init' is: ::
+A default usage of ``SC_fsm_init`` is: ::
 
   SC_Card card;
   if(SC_fsm_init(&card, 0, 0, 0, 0)){
@@ -100,7 +98,7 @@ The user can also perform a negotiation attempt and then fallback to default: ::
 
 .. note::
   Forcing elements such as the protocol or the ETU heavily depends on the smart card: some values and/or some smart cards
-  are not compatible or supported. This is why it is recommended to fallback to a non negotitated 'SC_fsm_init'
+  are not compatible or supported. This is why it is recommended to fallback to a non negotitated ``SC_fsm_init``
   if the negotiated one fails
  
 When a card communication must be reinitialized/reset, it is advised to wait for some timeouts using the following API: ::
@@ -108,7 +106,7 @@ When a card communication must be reinitialized/reset, it is advised to wait for
   int SC_wait_card_timeout(SC_Card *card);
 
 Finally, two APIs are used to explicitly ask the lower level driver to map or unmap the smart card device from the
-task's memory space: ::
+task``s memory space: ::
   
   int SC_fsm_map(void);
   int SC_fsm_unmap(void);
@@ -121,9 +119,9 @@ The library provides a unique API to send an APDU to a smart card and receive it
 
   int SC_send_APDU(SC_APDU_cmd *apdu, SC_APDU_resp *resp, SC_Card *card);
 
-The 'apdu' argument is a pointer to an input APDU structure, the 'resp' response is a pointer to a
-response structure that will be filled by the function, the 'card' structure is a pointer to an
-abstract card that has been obtained in the initialization phase with 'SC_fsm_init'.
+The ``apdu`` argument is a pointer to an input APDU structure, the ``resp`` response is a pointer to a
+response structure that will be filled by the function, the ``card`` structure is a pointer to an
+abstract card that has been obtained in the initialization phase with ``SC_fsm_init``.
 The library automatically handles the physical layer (T=0 or T=1, ISO14443) depending on the initialization
 phase.
 
