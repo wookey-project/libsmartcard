@@ -1,8 +1,11 @@
-The smartcard library
-=====================
+.. _lib_smartcard:
 
 .. highlight:: c
 
+The smartcard library
+=====================
+
+.. contents::
 
 This library is a wrapper for smart cards
 (either contact or contactless) communication.
@@ -15,11 +18,5 @@ cards, ...).
 For now, only contact cards are supported, the ISO14443
 is lacking a driver support that is a future work. 
  
-.. toctree::
-   :caption: Table of Contents
-   :name: mastertoc
-   :maxdepth: 2
-
-   The smartcard library API <api>
-   FAQ <faq>
-
+.. include:: api.rst
+.. include:: faq.rst

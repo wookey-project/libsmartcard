@@ -1,5 +1,5 @@
-Smartcard library FAQ
----------------------
+FAQ
+---
 
 Is the smartcard library complete?
 """"""""""""""""""""""""""""""""""

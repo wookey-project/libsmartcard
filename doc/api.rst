@@ -1,5 +1,5 @@
-About the smartcard library API
--------------------------------
+API
+---
 
 .. highlight:: c
 
