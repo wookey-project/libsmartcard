@@ -12,16 +12,19 @@
  *   units (envelopes in T=0 and blocks in T=1, blocks for ISO14443 card, ...).
  */
 /* Prepare the buffer to send */
-unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu){
+unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu, unsigned int *out_apdu_lc_size, unsigned int *out_apdu_le_size){
 	unsigned int apdu_size, apdu_lc_size, apdu_le_size;
 
 	if(apdu == NULL){
 		return 0;
 	}
 	/* Compute the APDU size */
-        apdu_lc_size = ((apdu->lc <= SHORT_APDU_LC_MAX) ?  ((apdu->lc == 0) ? 0 : 1) : 3);
-        if(apdu->send_le != 0){
-                if(apdu->le <= SHORT_APDU_LE_MAX){
+	apdu_lc_size = ((apdu->lc <= SHORT_APDU_LC_MAX) ? ((apdu->lc == 0) ? 0 : 1) : 3);
+	if(apdu->send_le){
+		/* apdu->send_le = 1 means short APDU encoding except if the size exceeds 256.
+		 * apdu->send_le = 2 means extended APDU encoding for Le.
+		 */
+		if((apdu->le <= SHORT_APDU_LE_MAX) && (apdu->send_le == 1)){
                         apdu_le_size = 1;
                 }
                 else{
@@ -38,11 +41,17 @@ unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu){
         }
         apdu_size = 4 + apdu_lc_size + apdu->lc + apdu_le_size;
 
+	if(out_apdu_lc_size != NULL){
+		*out_apdu_lc_size = apdu_lc_size;
+	}
+	if(out_apdu_le_size != NULL){
+		*out_apdu_le_size = apdu_le_size;
+	}
 	return apdu_size;
 }
 
 uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int i, uint8_t block_size, int *ret){
-	unsigned int apdu_size, apdu_lc_size, apdu_le_size;
+	unsigned int apdu_size, apdu_le_size;
 	unsigned int to_push, offset;
 	unsigned int size = 0;
 	*ret = 0;
@@ -59,27 +68,8 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 	}
 
 	/* Compute the APDU size */
-	apdu_lc_size = ((apdu->lc <= SHORT_APDU_LC_MAX) ? ((apdu->lc == 0) ? 0 : 1) : 3);
-	if(apdu->send_le){
-		/* apdu->send_le = 1 means short APDU encoding except if the size exceeds 256.
-		 * apdu->send_le = 2 means extended APDU encoding for Le.
-		 */
-		if((apdu->le <= SHORT_APDU_LE_MAX) && (apdu->send_le == 1)){
-			apdu_le_size = 1;
-		}
-		else{
-			if(apdu_lc_size != 0){
-				apdu_le_size = 2;
-			}
-			else{
-				apdu_le_size = 3;
-			}
-		}
-	}
-	else{
-		apdu_le_size = 0;
-	}
-	apdu_size = 4 + apdu_lc_size + apdu->lc + apdu_le_size;
+	apdu_size = SC_APDU_get_encapsulated_apdu_size(apdu, NULL, &apdu_le_size);
+
 	/* Sanity checks */
 	if(apdu_size < (i * block_size)){
 		*ret = -1;
@@ -105,28 +95,48 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 	offset = i * block_size; /* offset where we begin */
 	size = 0;
 	while(size < to_push){
-		if(size >= 256){
+		if((size >= block_size) || (size >= 256)){
 			/* Sanity check: our buffer should not exceed 256 bytes long anyways ... */
 			*ret = -1;
 			return 0;
 		}
 		/* Do we have to push CLA, IN, P1, P2? */
 		if(offset == 0){
+			if(size >= block_size){
+				/* Overflow ... this is an error */
+				*ret = -1;
+				return 0;
+			}
 			buffer[size++] = apdu->cla;
 			offset++;
 			continue;
 		}
 		if(offset == 1){
+			if(size >= block_size){
+				/* Overflow ... this is an error */
+				*ret = -1;
+				return 0;
+			}
 			buffer[size++] = apdu->ins;
 			offset++;
 			continue;
 		}
 		if(offset == 2){
+			if(size >= block_size){
+				/* Overflow ... this is an error */
+				*ret = -1;
+				return 0;
+			}
 			buffer[size++] = apdu->p1;
 			offset++;
 			continue;
 		}
 		if(offset == 3){
+			if(size >= block_size){
+				/* Overflow ... this is an error */
+				*ret = -1;
+				return 0;
+			}
 			buffer[size++] = apdu->p2;
 			offset++;
 			continue;
@@ -136,12 +146,22 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 			if(apdu->lc != 0){
 				if(apdu->lc <= SHORT_APDU_LC_MAX){
 					if(offset == 4){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = apdu->lc;
 						offset++;
 						continue;
 					}
 					if(offset > 4){
 						if((offset-5) >= APDU_MAX_BUFF_LEN){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
+						if(size >= block_size){
 							/* Overflow ... this is an error */
 							*ret = -1;
 							return 0;
@@ -153,22 +173,42 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 				}
 				else{
 					if(offset == 4){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = 0;
 						offset++;
 						continue;
 					}
 					if(offset == 5){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = (apdu->lc >> 8) & 0xff;
 						offset++;
 						continue;
 					}
 					if(offset == 6){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = apdu->lc & 0xff;
 						offset++;
 						continue;
 					}
 					if(offset > 6){
 						if((offset-7) >= APDU_MAX_BUFF_LEN){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
+						if(size >= block_size){
 							/* Overflow ... this is an error */
 							*ret = -1;
 							return 0;
@@ -185,6 +225,11 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 			if(offset >= (apdu_size - apdu_le_size)){
 				if(apdu_le_size == 1){
 					if(offset == (apdu_size-1)){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = apdu->le;
 						offset++;
 						continue;
@@ -192,11 +237,21 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 				}
 				if(apdu_le_size == 2){
 					if(offset == (apdu_size-2)){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = (apdu->le >> 8) & 0xff;
 						offset++;
 						continue;
 					}
 					if(offset == (apdu_size-1)){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = apdu->le & 0xff;
 						offset++;
 						continue;
@@ -204,16 +259,31 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 				}
 				if(apdu_le_size == 3){
 					if(offset == (apdu_size-3)){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = 0x00;
 						offset++;
 						continue;
 					}
 					if(offset == (apdu_size-2)){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = (apdu->le >> 8) & 0xff;
 						offset++;
 						continue;
 					}
 					if(offset == (apdu_size-1)){
+						if(size >= block_size){
+							/* Overflow ... this is an error */
+							*ret = -1;
+							return 0;
+						}
 						buffer[size++] = apdu->le & 0xff;
 						offset++;
 						continue;
@@ -365,7 +435,7 @@ int SC_fsm_early_init(sc_map_mode_t map_mode)
             }
             break;
         default:
-            printf("invalid map mode\n");
+            log_printf("invalid map mode\n");
             goto err;
     }
 

@@ -106,7 +106,7 @@ typedef enum {
 
 
 /* 'Low level' communication with the smartcard */
-unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu);
+unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu, unsigned int *out_apdu_lc_size, unsigned int *out_apdu_le_size);
 uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int i, uint8_t block_size, int *ret);
 void SC_print_Card(SC_Card *card);
 void SC_print_APDU(SC_APDU_cmd *apdu);
