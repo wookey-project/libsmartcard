@@ -299,8 +299,6 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 /* Print an APDU on the console */
 void SC_print_APDU(SC_APDU_cmd *apdu)
 {
-        unsigned int i;
-
         if(apdu == NULL){
                 return;
         }
@@ -311,33 +309,28 @@ void SC_print_APDU(SC_APDU_cmd *apdu)
                 return;
         }
         log_printf("===== APDU ============\n");
-        log_printf("CLA = %x, INS = %x, P1 = %x, P2 = %x", apdu->cla, apdu->ins, apdu->p1, apdu->p2);
+        log_printf("CLA = %x, INS = %x, P1 = %x, P2 = %x\n", apdu->cla, apdu->ins, apdu->p1, apdu->p2);
         if(apdu->lc != 0){
-                log_printf(", Lc = %x", apdu->lc);
+                log_printf(", Lc = %x\n", apdu->lc);
                 if(apdu->lc > 255){
                         log_printf(" (extended)");
                 }
         }
         else{
-                log_printf(", No Lc");
+                log_printf(", No Lc\n");
 
         }
         if(apdu->send_le != 0){
-                log_printf(", Le = %x", apdu->le);
+                log_printf(", Le = %x\n", apdu->le);
                 if((apdu->le > 256) || (apdu->send_le == 2)){
                         log_printf(" (extended)");
                 }
         }
         else{
-                log_printf(", No Le");
+                log_printf(", No Le\n");
         }
         log_printf("\n");
-        for(i = 0; i < apdu->lc; i++){
-                log_printf("%x ", apdu->data[i]);
-        }
-        if(apdu->lc != 0){
-                log_printf("\n");
-        }
+	hexdump(apdu->data, apdu->lc);
 
         return;
 }
@@ -346,8 +339,6 @@ void SC_print_APDU(SC_APDU_cmd *apdu)
 /* Print a RESP on the console */
 void SC_print_RESP(SC_APDU_resp *resp)
 {
-        unsigned int i;
-
         if(resp == NULL){
                 return;
         }
@@ -359,12 +350,7 @@ void SC_print_RESP(SC_APDU_resp *resp)
         }
         log_printf("===== RESP ============\n");
         log_printf("SW1 = %x, SW2 = %x, Le = %x\n", resp->sw1, resp->sw2, resp->le);
-        for(i = 0; i < resp->le; i++){
-                log_printf("%x ", resp->data[i]);
-        }
-        if(resp->le != 0){
-                log_printf("\n");
-        }
+	hexdump(resp->data, resp->le);
 
         return;
 }
