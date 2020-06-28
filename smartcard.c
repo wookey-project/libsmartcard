@@ -144,7 +144,7 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 		/* Handle Lc */
 		if((offset >= 4) && (offset < (apdu_size - apdu_le_size))){
 			if(apdu->lc != 0){
-				if(apdu->lc <= SHORT_APDU_LC_MAX){
+				if((apdu->lc <= SHORT_APDU_LC_MAX) && (apdu->send_le != 2)){
 					if(offset == 4){
 						if(size >= block_size){
 							/* Overflow ... this is an error */
