@@ -19,7 +19,14 @@ unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu, unsigned int 
 		return 0;
 	}
 	/* Compute the APDU size */
-	apdu_lc_size = ((apdu->lc <= SHORT_APDU_LC_MAX) ? ((apdu->lc == 0) ? 0 : 1) : 3);
+        if(apdu->send_le != 2){
+                /* Short APDU case for Lc */
+                apdu_lc_size = ((apdu->lc <= SHORT_APDU_LC_MAX) ? ((apdu->lc == 0) ? 0 : 1) : 3);
+        }
+        else{
+                /* Extended APDU case for Lc (forced whatever Lc size is) */
+                apdu_lc_size = (apdu->lc == 0) ? 0 : 3;
+        }
 	if(apdu->send_le){
 		/* apdu->send_le = 1 means short APDU encoding except if the size exceeds 256.
 		 * apdu->send_le = 2 means extended APDU encoding for Le.
@@ -51,7 +58,7 @@ unsigned int SC_APDU_get_encapsulated_apdu_size(SC_APDU_cmd *apdu, unsigned int 
 }
 
 uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int i, uint8_t block_size, int *ret){
-	unsigned int apdu_size, apdu_le_size;
+	unsigned int apdu_size, apdu_lc_size, apdu_le_size;
 	unsigned int to_push, offset;
 	unsigned int size = 0;
 	*ret = 0;
@@ -68,7 +75,7 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 	}
 
 	/* Compute the APDU size */
-	apdu_size = SC_APDU_get_encapsulated_apdu_size(apdu, NULL, &apdu_le_size);
+	apdu_size = SC_APDU_get_encapsulated_apdu_size(apdu, &apdu_lc_size, &apdu_le_size);
 
 	/* Sanity checks */
 	if(apdu_size < (i * block_size)){
@@ -144,7 +151,12 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 		/* Handle Lc */
 		if((offset >= 4) && (offset < (apdu_size - apdu_le_size))){
 			if(apdu->lc != 0){
-				if(apdu->lc <= SHORT_APDU_LC_MAX){
+				if((apdu->lc <= SHORT_APDU_LC_MAX) && (apdu->send_le != 2)){
+					/* Sanity check: Lc is encoded on 1 byte */
+					if(apdu_lc_size != 1){
+						*ret = -1;
+						return 0;
+					}
 					if(offset == 4){
 						if(size >= block_size){
 							/* Overflow ... this is an error */
@@ -172,6 +184,11 @@ uint8_t SC_APDU_prepare_buffer(SC_APDU_cmd *apdu, uint8_t *buffer, unsigned int 
 					}
 				}
 				else{
+					/* Sanity check: Lc is encoded on 3 bytes */
+					if(apdu_lc_size != 3){
+						*ret = -1;
+						return 0;
+					}
 					if(offset == 4){
 						if(size >= block_size){
 							/* Overflow ... this is an error */
